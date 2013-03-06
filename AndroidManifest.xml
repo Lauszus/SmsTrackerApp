@@ -42,7 +42,7 @@
             android:value="@string/MapsKeyDebug" />
 
         <activity
-            android:name="com.tkjelectronics.weatherballoonapp.WeatherBalloonActivity"
+            android:name=".WeatherBalloonActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

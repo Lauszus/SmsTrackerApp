@@ -20,7 +20,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 public class WeatherBalloonActivity extends FragmentActivity implements LocationListener {
-	private static final String TAG = "SmsReceiverActivity";
+	private static final String TAG = "WeatherBalloonActivity";
 	private LocationManager locationManager;
 	
 	private static GoogleMap mMap;
@@ -85,10 +85,12 @@ public class WeatherBalloonActivity extends FragmentActivity implements Location
 		}
 		if(locationMarker == null) { // Set the marker to the last know position when the app is created
 			Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-			LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
-			mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinates, 5));
-			mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
-			locationMarker = mMap.addMarker(new MarkerOptions().position(coordinates).title("Last known location"));
+			if(location != null) {
+				LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
+				mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinates, 5));
+				mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
+				locationMarker = mMap.addMarker(new MarkerOptions().position(coordinates).title("Last known location"));
+			}
 		}
 	}	
 
@@ -97,6 +99,7 @@ public class WeatherBalloonActivity extends FragmentActivity implements Location
 		if(locationMarker != null)
 			locationMarker.remove();
 		LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
+		Log.i(TAG,"Coordinates " + coordinates.toString());
 		locationMarker = mMap.addMarker(new MarkerOptions().position(coordinates).title("Your exact location"));
 		if(firstExactPosition) {
 			firstExactPosition = false;

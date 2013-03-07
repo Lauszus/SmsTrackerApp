@@ -1,5 +1,7 @@
 package com.tkjelectronics.weatherballoonapp;
 
+import java.util.List;
+
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -11,6 +13,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -23,9 +26,10 @@ public class WeatherBalloonActivity extends FragmentActivity implements Location
 	private static final String TAG = "WeatherBalloonActivity";
 	private LocationManager locationManager;
 	
-	private static GoogleMap mMap;
-	private static Marker locationMarker;
-	private static boolean firstExactPosition;
+	private GoogleMap mMap;
+	private Marker locationMarker;
+	private boolean firstExactPosition;
+	private SmsReceiver mSmsReceiver = new SmsReceiver(this);
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -37,11 +41,13 @@ public class WeatherBalloonActivity extends FragmentActivity implements Location
 	@Override
 	protected void onPause() {
 		super.onPause();
+		unregisterReceiver(mSmsReceiver);
 		locationManager.removeUpdates(this);
 	}
 	@Override
 	protected void onResume() {
 		super.onResume();
+		registerReceiver(mSmsReceiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
 		if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			new AlertDialog.Builder(this)
 					.setMessage("Your GPS seems to be disabled, do you want to enable it?")
@@ -61,9 +67,13 @@ public class WeatherBalloonActivity extends FragmentActivity implements Location
 								}
 							})
 					.create().show();
-		} else {			
+		} else {
 			Toast.makeText(this,"Getting exact position...", Toast.LENGTH_SHORT).show();
-			locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);			
+			List<String> enabledProviders = locationManager.getProviders(true);
+			for(String provider:enabledProviders) {
+				Log.i(TAG, "Requesting location updates from: " + provider);
+				this.locationManager.requestLocationUpdates(provider, 0, 0, this);
+			}
 			setUpMapIfNeeded();
 		}
 	}
@@ -92,15 +102,15 @@ public class WeatherBalloonActivity extends FragmentActivity implements Location
 				locationMarker = mMap.addMarker(new MarkerOptions().position(coordinates).title("Last known location"));
 			}
 		}
-	}	
-
+	}
+	
 	@Override
 	public void onLocationChanged(Location location) {
 		if(locationMarker != null)
 			locationMarker.remove();
 		LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
-		Log.i(TAG,"Coordinates " + coordinates.toString());
-		locationMarker = mMap.addMarker(new MarkerOptions().position(coordinates).title("Your exact location"));
+		Log.i(TAG,"onLocationChanged " + coordinates.toString() + " via " + location.getProvider() + " Accuracy: " + location.getAccuracy());
+		//locationMarker = mMap.addMarker(new MarkerOptions().position(coordinates).title("Your exact location"));
 		if(firstExactPosition) {
 			firstExactPosition = false;
 			mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinates, 15));
@@ -109,18 +119,21 @@ public class WeatherBalloonActivity extends FragmentActivity implements Location
 	}
 	@Override
 	public void onProviderDisabled(String provider) {
+		Log.i(TAG, "Provider " + provider + " is now disabled.");
 	}
 	@Override
 	public void onProviderEnabled(String provider) {
+		Log.i(TAG, "Provider " + provider + " is now enabled.");
 	}
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras) {
+		Log.i(TAG, "Provider " + provider + " has changed status to " + status);
 	}
 	
-	public static void newMapMarker(LatLng coordinates, String title) {		
+	public void newMapMarker(LatLng coordinates, String title) {
 		if (mMap != null && coordinates != null) {
 			firstExactPosition = false; // We don't care about the new position if there is a new position available
-			Log.i(TAG,"Coordinates " + coordinates.toString());
+			Log.i(TAG,"newMapMarker " + coordinates.toString());
 			mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinates, 5));
 			mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
 			mMap.addMarker(new MarkerOptions().position(coordinates).title(title));

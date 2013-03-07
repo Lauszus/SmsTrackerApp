@@ -15,9 +15,14 @@ public class SmsReceiver extends BroadcastReceiver {
 	private static final String TAG = "SmsReceiver";
 	private static final String SMS_ACTION = "android.provider.Telephony.SMS_RECEIVED";
 	private static final String SMS_EXTRA_NAME = "pdus";
-	private StringBuilder address = new StringBuilder();
-	private StringBuilder body = new StringBuilder();
-
+	private String address = "";
+	private String body = "";
+	private WeatherBalloonActivity mWeatherBalloonActivity;
+    
+    public SmsReceiver(WeatherBalloonActivity weatherBalloonActivity) {
+    	mWeatherBalloonActivity = weatherBalloonActivity;
+	}
+    
     @Override
     public void onReceive(Context context, Intent intent) {    	
     	if(intent.getAction().equals(SMS_ACTION)) {
@@ -25,22 +30,26 @@ public class SmsReceiver extends BroadcastReceiver {
     		
     		if (bundle != null) {
     			Object[] smsExtra = (Object[]) bundle.get(SMS_EXTRA_NAME); // Retrieve the SMS message received
+    			/*
     			SmsMessage[] msgs = new SmsMessage[smsExtra.length];
-	            for (int i=0; i<msgs.length; i++) {
+	            for (int i=0; i<msgs.length; i++)
 	                msgs[i] = SmsMessage.createFromPdu((byte[])smsExtra[i]);
-	                address.append(msgs[i].getOriginatingAddress());
-	                body.append(msgs[i].getMessageBody().toString());
-	            }
-	            Log.i(TAG, "smsReceive: " + address + " : " + body);
-	            if(address.equals(R.string.phoneNumber)) { // Compare to the phone number
+	            address = msgs[msgs.length-1].getOriginatingAddress();
+	            body = msgs[msgs.length-1].getMessageBody();
+	            */
+    			SmsMessage msgs = SmsMessage.createFromPdu((byte[])smsExtra[smsExtra.length-1]); // Get the newest message
+    			address = msgs.getOriginatingAddress();
+	            body = msgs.getMessageBody();
+	            Log.i(TAG, "Received sms from: " + address + "\nMessage: " + body);
+	            if(address.equals(context.getString(R.string.phoneNumber))) { // Compare to the phone number
 	            	try {
-		            	String[] latlngStr = body.toString().replaceAll("[^(0-9|,|.)]", "").split(",",2);
-		            	if(latlngStr.length < 2) {
+		            	String[] latLngStr = body.replaceAll("[^(0-9|,|.)]", "").split(",",2);
+		            	if(latLngStr.length < 2) {
 		            		Log.i(TAG,"Failed to split string");
 		            		return;
 		            	}
-			            Log.i(TAG,"Coordinates: " + latlngStr[0] + "," + latlngStr[1]);
-		            	WeatherBalloonActivity.newMapMarker(new LatLng(Double.parseDouble(latlngStr[0]),Double.parseDouble(latlngStr[1])), null);
+		            	Log.i(TAG,"Coordinates: " + latLngStr[0] + "," + latLngStr[1]);
+		            	mWeatherBalloonActivity.newMapMarker(new LatLng(Double.parseDouble(latLngStr[0]),Double.parseDouble(latLngStr[1])), null);
 		            } catch (NullPointerException e) {
 		            	Log.i(TAG,"Body is empty");
 		            } catch(NumberFormatException e) {

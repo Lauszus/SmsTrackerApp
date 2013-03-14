@@ -30,14 +30,8 @@
         android:hardwareAccelerated="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
-        <!-- 
-        <receiver android:name=".SmsReceiver" >
-            <intent-filter>
-                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
-            </intent-filter>
-        </receiver>
-         -->
+        android:theme="@style/Theme.Sherlock" >
+        
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="@string/MapsKeyDebug" />

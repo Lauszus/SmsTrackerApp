@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
 
+import com.actionbarsherlock.app.SherlockFragmentActivity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -23,11 +24,10 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.widget.Toast;
 
-public class WeatherBalloonActivity extends FragmentActivity implements LocationListener {
+public class WeatherBalloonActivity extends SherlockFragmentActivity implements LocationListener {
 	private static final String TAG = "WeatherBalloonActivity";
 	private LocationManager locationManager;
 	
@@ -84,8 +84,7 @@ public class WeatherBalloonActivity extends FragmentActivity implements Location
 	        .setMessage("Are you sure you want to close this activity?")
 	        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 	        	@Override
-	        	public void onClick(DialogInterface dialog, int which) {
-	        		unregisterReceiver(mSmsReceiver);
+	        	public void onClick(DialogInterface dialog, int which) {	        		
 	        		finish();    
 	        	}
 	        })
@@ -129,6 +128,12 @@ public class WeatherBalloonActivity extends FragmentActivity implements Location
 			}
 			setUpMapIfNeeded();
 		}
+	}
+	
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		unregisterReceiver(mSmsReceiver);		
 	}
 
 	private void setUpMapIfNeeded() {

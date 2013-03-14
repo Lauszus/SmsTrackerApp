@@ -1,5 +1,9 @@
 package com.tkjelectronics.weatherballoonapp;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -18,6 +22,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.widget.Toast;
@@ -30,24 +35,72 @@ public class WeatherBalloonActivity extends FragmentActivity implements Location
 	private Marker locationMarker;
 	private boolean firstExactPosition;
 	private SmsReceiver mSmsReceiver = new SmsReceiver(this);
+	private File dir;
+	private File log;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		firstExactPosition = true;
+		firstExactPosition = true;		
+		
+		dir = new File(Environment.getExternalStorageDirectory(), "Coordinates"); // Write data to the root of the SD card
+		if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+			if(!dir.exists())
+				dir.mkdir();
+		}
+		
+		log = new File(dir, "log.txt"); // Write data to the SD card
+		//log.delete();
+		if (!log.exists()) { // http://stackoverflow.com/a/6209739
+			try {
+				log.createNewFile();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		registerReceiver(mSmsReceiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
 	}
+	
+	private void appendToLog(LatLng coordinates) {		
+		try {
+			BufferedWriter buf = new BufferedWriter(new FileWriter(log,true));
+			buf.append(Double.toString(coordinates.latitude) + "," + Double.toString(coordinates.longitude));
+			buf.newLine();
+			buf.flush();
+			buf.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public void onBackPressed() {
+		new AlertDialog.Builder(this)
+	        .setIcon(android.R.drawable.ic_dialog_alert)
+	        .setTitle("Closing Activity")
+	        .setMessage("Are you sure you want to close this activity?")
+	        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+	        	@Override
+	        	public void onClick(DialogInterface dialog, int which) {
+	        		unregisterReceiver(mSmsReceiver);
+	        		finish();    
+	        	}
+	        })
+	        .setNegativeButton("No", null)
+	        .show();
+	}
+	
 	@Override
 	protected void onPause() {
-		super.onPause();
-		unregisterReceiver(mSmsReceiver);
+		super.onPause();		
 		locationManager.removeUpdates(this);
 	}
 	@Override
 	protected void onResume() {
-		super.onResume();
-		registerReceiver(mSmsReceiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
+		super.onResume();		
 		if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 			new AlertDialog.Builder(this)
 					.setMessage("Your GPS seems to be disabled, do you want to enable it?")
@@ -131,6 +184,7 @@ public class WeatherBalloonActivity extends FragmentActivity implements Location
 	}
 	
 	public void newMapMarker(LatLng coordinates, String title) {
+		appendToLog(coordinates);
 		if (mMap != null && coordinates != null) {
 			firstExactPosition = false; // We don't care about the new position if there is a new position available
 			Log.i(TAG,"newMapMarker " + coordinates.toString());

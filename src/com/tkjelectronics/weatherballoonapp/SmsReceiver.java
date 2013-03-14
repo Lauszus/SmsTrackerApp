@@ -30,18 +30,11 @@ public class SmsReceiver extends BroadcastReceiver {
     		
     		if (bundle != null) {
     			Object[] smsExtra = (Object[]) bundle.get(SMS_EXTRA_NAME); // Retrieve the SMS message received
-    			/*
-    			SmsMessage[] msgs = new SmsMessage[smsExtra.length];
-	            for (int i=0; i<msgs.length; i++)
-	                msgs[i] = SmsMessage.createFromPdu((byte[])smsExtra[i]);
-	            address = msgs[msgs.length-1].getOriginatingAddress();
-	            body = msgs[msgs.length-1].getMessageBody();
-	            */
     			SmsMessage msgs = SmsMessage.createFromPdu((byte[])smsExtra[smsExtra.length-1]); // Get the newest message
     			address = msgs.getOriginatingAddress();
 	            body = msgs.getMessageBody();
 	            Log.i(TAG, "Received sms from: " + address + "\nMessage: " + body);
-	            if(address.equals(context.getString(R.string.phoneNumber))) { // Compare to the phone number
+	            if(address.equals(context.getString(R.string.phoneNumber1)) || address.equals(context.getString(R.string.phoneNumber2))) { // Compare to the phone number
 	            	try {
 		            	String[] latLngStr = body.replaceAll("[^(0-9|,|.)]", "").split(",",2);
 		            	if(latLngStr.length < 2) {

@@ -43,13 +43,16 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-		firstExactPosition = true;		
+		firstExactPosition = true;
+		
+		if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+			Toast.makeText(getApplicationContext(),"Please insert a SD card to use this application", Toast.LENGTH_LONG).show();
+			finish();
+		}
 		
 		dir = new File(Environment.getExternalStorageDirectory(), "Coordinates"); // Write data to the root of the SD card
-		if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-			if(!dir.exists())
-				dir.mkdir();
-		}
+		if(!dir.exists())
+			dir.mkdir();
 		
 		log = new File(dir, "log.txt"); // Write data to the SD card
 		//log.delete();
@@ -115,7 +118,7 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 								public void onClick(final DialogInterface dialog,final int id) {
 									dialog.cancel();
 									Toast.makeText(getApplicationContext(),"GPS must be on in order to use this application!", Toast.LENGTH_LONG).show();
-									finish();									
+									finish();
 								}
 							})
 					.create().show();

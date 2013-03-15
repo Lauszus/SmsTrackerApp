@@ -18,38 +18,38 @@ public class SmsReceiver extends BroadcastReceiver {
 	private String address = "";
 	private String body = "";
 	private WeatherBalloonActivity mWeatherBalloonActivity;
-    
-    public SmsReceiver(WeatherBalloonActivity weatherBalloonActivity) {
-    	mWeatherBalloonActivity = weatherBalloonActivity;
+
+	public SmsReceiver(WeatherBalloonActivity weatherBalloonActivity) {
+		mWeatherBalloonActivity = weatherBalloonActivity;
 	}
-    
-    @Override
-    public void onReceive(Context context, Intent intent) {    	
-    	if(intent.getAction().equals(SMS_ACTION)) {
-    		Bundle bundle = intent.getExtras(); // Get the SMS message passed in
-    		
-    		if (bundle != null) {
-    			Object[] smsExtra = (Object[]) bundle.get(SMS_EXTRA_NAME); // Retrieve the SMS message received
-    			SmsMessage msgs = SmsMessage.createFromPdu((byte[])smsExtra[smsExtra.length-1]); // Get the newest message
-    			address = msgs.getOriginatingAddress();
-	            body = msgs.getMessageBody();
-	            Log.i(TAG, "Received sms from: " + address + "\nMessage: " + body);
-	            if(address.equals(context.getString(R.string.phoneNumber1)) || address.equals(context.getString(R.string.phoneNumber2))) { // Compare to the phone number
-	            	try {
-		            	String[] latLngStr = body.replaceAll("[^(0-9|,|.)]", "").split(",",2);
-		            	if(latLngStr.length < 2) {
-		            		Log.i(TAG,"Failed to split string");
-		            		return;
-		            	}
-		            	Log.i(TAG,"Coordinates: " + latLngStr[0] + "," + latLngStr[1]);
-		            	mWeatherBalloonActivity.newMapMarker(new LatLng(Double.parseDouble(latLngStr[0]),Double.parseDouble(latLngStr[1])), null);
-		            } catch (NullPointerException e) {
-		            	Log.i(TAG,"Body is empty");
-		            } catch(NumberFormatException e) {
-		            	Log.i(TAG,"Failed to parse double");
-		            }
-	            }
-	        }
-	    }
-    }
+
+	@Override
+	public void onReceive(Context context, Intent intent) {
+		if (intent.getAction().equals(SMS_ACTION)) {
+			Bundle bundle = intent.getExtras(); // Get the SMS message passed in
+
+			if (bundle != null) {
+				Object[] smsExtra = (Object[]) bundle.get(SMS_EXTRA_NAME); // Retrieve the SMS message received
+				SmsMessage msgs = SmsMessage.createFromPdu((byte[]) smsExtra[smsExtra.length - 1]); // Get the newest message
+				address = msgs.getOriginatingAddress();
+				body = msgs.getMessageBody();
+				Log.i(TAG, "Received sms from: " + address + "\nMessage: " + body);
+				if (address.equals(context.getString(R.string.phoneNumber1)) || address.equals(context.getString(R.string.phoneNumber2))) { // Compare to the phone number
+					try {
+						String[] latLngStr = body.replaceAll("[^(0-9|,|.)]", "").split(",", 2);
+						if (latLngStr.length < 2) {
+							Log.i(TAG, "Failed to split string");
+							return;
+						}
+						Log.i(TAG, "Coordinates: " + latLngStr[0] + "," + latLngStr[1]);
+						mWeatherBalloonActivity.newMapMarker(new LatLng(Double.parseDouble(latLngStr[0]),Double.parseDouble(latLngStr[1])),null);
+					} catch (NullPointerException e) {
+						Log.i(TAG, "Body is empty");
+					} catch (NumberFormatException e) {
+						Log.i(TAG, "Failed to parse double");
+					}
+				}
+			}
+		}
+	}
 }

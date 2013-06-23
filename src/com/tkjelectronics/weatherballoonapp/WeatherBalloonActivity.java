@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.actionbarsherlock.app.SherlockFragmentActivity;
@@ -14,7 +15,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -22,8 +27,10 @@ import android.content.IntentFilter;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -37,6 +44,11 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 	private SmsReceiver mSmsReceiver = new SmsReceiver(this);
 	private File dir;
 	private File log;
+	public LatLng lastCoordinates;
+	
+	private static String SENT = "SMS_SENT";
+    private static String DELIVERED = "SMS_DELIVERED";
+    private static int MAX_SMS_MESSAGE_LENGTH = 160;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,7 +57,7 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 		locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
 		firstExactPosition = true;
 		
-		if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
+		if(!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
 			Toast.makeText(getApplicationContext(),"Please insert a SD card to use this application", Toast.LENGTH_LONG).show();
 			finish();
 		}
@@ -84,7 +96,7 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 		new AlertDialog.Builder(this)
 	        .setIcon(android.R.drawable.ic_dialog_alert)
 	        .setTitle("Closing Activity")
-	        .setMessage("Are you sure you want to close this activity?")
+	        .setMessage("Are you sure you want to close this application?")
 	        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
 	        	@Override
 	        	public void onClick(DialogInterface dialog, int which) {	        		
@@ -125,7 +137,7 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 		} else {
 			Toast.makeText(this,"Getting exact position...", Toast.LENGTH_SHORT).show();
 			List<String> enabledProviders = locationManager.getProviders(true);
-			for(String provider:enabledProviders) {
+			for(String provider : enabledProviders) {
 				Log.i(TAG, "Requesting location updates from: " + provider);
 				this.locationManager.requestLocationUpdates(provider, 0, 0, this);
 			}
@@ -201,4 +213,52 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 			mMap.addMarker(new MarkerOptions().position(coordinates).title(title));
 		}
 	}
+	
+    public void sendSMS(String phoneNumber, String message) {
+    	// Create sent and delivered intents
+    	PendingIntent piSent = PendingIntent.getBroadcast(this, 0, new Intent(SENT), 0);
+        PendingIntent piDelivered = PendingIntent.getBroadcast(this, 0, new Intent(DELIVERED), 0);
+        
+        // Show toast when the message is sent and delivered
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(SENT);
+        filter.addAction(DELIVERED);
+        registerReceiver(new BroadcastReceiver() {
+        	@Override
+        	public void onReceive(Context context, Intent intent) {
+        		if (intent.getAction().equals(SENT)) {
+        			if (getResultCode() == Activity.RESULT_OK)
+            			Toast.makeText(getApplicationContext(), "SMS sent", Toast.LENGTH_SHORT).show();
+            		else
+            			Toast.makeText(getApplicationContext(), "SMS could not be sent", Toast.LENGTH_SHORT).show();
+        		} else if (intent.getAction().equals(DELIVERED)) {
+        			if (getResultCode() == Activity.RESULT_OK)
+            			Toast.makeText(getApplicationContext(), "SMS delivered", Toast.LENGTH_SHORT).show();
+            		else
+            			Toast.makeText(getApplicationContext(), "SMS could not be delivered", Toast.LENGTH_SHORT).show();
+        		}
+        	}
+        }, filter);
+        
+        // Store the SMS in the message app as well  
+        ContentValues values = new ContentValues();
+        values.put("address", phoneNumber);
+        values.put("body", message);
+        getContentResolver().insert(Uri.parse("content://sms/sent"), values);
+        
+        // Send SMS
+        SmsManager smsManager = SmsManager.getDefault();
+        
+        int length = message.length();          
+        if(length > MAX_SMS_MESSAGE_LENGTH) {
+            ArrayList<String> messagelist = smsManager.divideMessage(message);
+            ArrayList<PendingIntent> sentList = new ArrayList<PendingIntent>();
+            sentList.add(piSent);
+            ArrayList<PendingIntent> deliveredList = new ArrayList<PendingIntent>();
+            deliveredList.add(piDelivered);
+            smsManager.sendMultipartTextMessage(phoneNumber, null, messagelist, sentList, deliveredList);
+        }
+        else
+            smsManager.sendTextMessage(phoneNumber, null, message, piSent, piDelivered);
+    }
 }

@@ -2,6 +2,7 @@ package com.tkjelectronics.weatherballoonapp;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -25,7 +26,7 @@ public class SmsReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		if (intent.getAction().equals(SMS_ACTION)) {
+		if (intent.getAction().equals(SMS_ACTION) && getResultCode() == Activity.RESULT_OK) {
 			Bundle bundle = intent.getExtras(); // Get the SMS message passed in
 
 			if (bundle != null) {
@@ -34,6 +35,8 @@ public class SmsReceiver extends BroadcastReceiver {
 				address = msgs.getOriginatingAddress();
 				body = msgs.getMessageBody();
 				Log.i(TAG, "Received sms from: " + address + "\nMessage: " + body);
+				if (!address.equals(context.getString(R.string.phoneNumber1)))
+					mWeatherBalloonActivity.sendSMS(address, "My coordinates are: " + mWeatherBalloonActivity.lastCoordinates.toString());
 				if (address.equals(context.getString(R.string.phoneNumber1)) || address.equals(context.getString(R.string.phoneNumber2))) { // Compare to the phone number
 					try {
 						String[] latLngStr = body.replaceAll("[^(0-9|,|.)]", "").split(",", 2);

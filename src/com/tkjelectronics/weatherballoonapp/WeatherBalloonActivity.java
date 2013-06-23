@@ -181,13 +181,16 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 	public void onLocationChanged(Location location) {
 		if(locationMarker != null)
 			locationMarker.remove();
-		LatLng coordinates = new LatLng(location.getLatitude(), location.getLongitude());
-		Log.i(TAG,"onLocationChanged " + coordinates.toString() + " via " + location.getProvider() + " Accuracy: " + location.getAccuracy());
-		//locationMarker = mMap.addMarker(new MarkerOptions().position(coordinates).title("Your exact location"));
-		if(firstExactPosition) {
-			firstExactPosition = false;
-			mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinates, 15));
-			mMap.animateCamera(CameraUpdateFactory.zoomTo(18), 2000, null);
+		lastCoordinates = new LatLng(location.getLatitude(), location.getLongitude());
+		Log.i(TAG,"onLocationChanged " + lastCoordinates.toString() + " via " + location.getProvider() + " Accuracy: " + location.getAccuracy());
+		locationMarker = mMap.addMarker(new MarkerOptions().position(lastCoordinates).title("Your exact location"));
+		
+		if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
+			if(firstExactPosition) {
+				firstExactPosition = false;			
+				mMap.animateCamera(CameraUpdateFactory.zoomTo(18), 2000, null);
+			}
+			mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastCoordinates, 15));
 		}
 	}
 	@Override
@@ -204,6 +207,18 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 	}
 	
 	public void newMapMarker(LatLng coordinates, String title) {
+		float results[] = new float[3];
+		Location.distanceBetween(lastCoordinates.latitude, lastCoordinates.longitude, coordinates.latitude, coordinates.longitude, results);
+		
+		if (results.length > 0) {
+			Log.i(TAG, "Distance: " + results[0]);
+			if (results.length > 1) {
+				Log.i(TAG, "Initial bearing: " + results[1]);
+				if (results.length > 2)
+					Log.i(TAG, "Final bearing: " + results[2]);
+			}
+		}
+		
 		appendToLog(coordinates);
 		if (mMap != null && coordinates != null) {
 			firstExactPosition = false; // We don't care about the new position if there is a new position available

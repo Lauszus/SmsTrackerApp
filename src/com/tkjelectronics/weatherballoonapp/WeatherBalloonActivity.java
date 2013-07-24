@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.actionbarsherlock.app.SherlockFragmentActivity;
+import com.actionbarsherlock.view.Menu;
+import com.actionbarsherlock.view.MenuInflater;
+import com.actionbarsherlock.view.MenuItem;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.SupportMapFragment;
@@ -36,6 +39,8 @@ import android.widget.Toast;
 
 public class WeatherBalloonActivity extends SherlockFragmentActivity implements LocationListener {
 	private static final String TAG = "WeatherBalloonActivity";
+	public static final boolean D = BuildConfig.DEBUG; // This is automatically set by Gradle
+	
 	private LocationManager locationManager;
 	
 	private GoogleMap mMap;
@@ -79,10 +84,10 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 		registerReceiver(mSmsReceiver, new IntentFilter("android.provider.Telephony.SMS_RECEIVED"));
 	}
 	
-	private void appendToLog(LatLng coordinates) {		
+	public void appendToLog(String position) {
 		try {
 			BufferedWriter buf = new BufferedWriter(new FileWriter(log,true));
-			buf.append(Double.toString(coordinates.latitude) + "," + Double.toString(coordinates.longitude));
+			buf.append(position);
 			buf.newLine();
 			buf.flush();
 			buf.close();
@@ -138,7 +143,8 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 			Toast.makeText(this,"Getting exact position...", Toast.LENGTH_SHORT).show();
 			List<String> enabledProviders = locationManager.getProviders(true);
 			for(String provider : enabledProviders) {
-				Log.i(TAG, "Requesting location updates from: " + provider);
+				if (D)
+					Log.i(TAG, "Requesting location updates from: " + provider);
 				this.locationManager.requestLocationUpdates(provider, 0, 0, this);
 			}
 			setUpMapIfNeeded();
@@ -148,7 +154,7 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		unregisterReceiver(mSmsReceiver);		
+		unregisterReceiver(mSmsReceiver);
 	}
 
 	private void setUpMapIfNeeded() {
@@ -179,53 +185,89 @@ public class WeatherBalloonActivity extends SherlockFragmentActivity implements 
 	
 	@Override
 	public void onLocationChanged(Location location) {
-		if(locationMarker != null)
-			locationMarker.remove();
-		lastCoordinates = new LatLng(location.getLatitude(), location.getLongitude());
-		Log.i(TAG,"onLocationChanged " + lastCoordinates.toString() + " via " + location.getProvider() + " Accuracy: " + location.getAccuracy());
-		locationMarker = mMap.addMarker(new MarkerOptions().position(lastCoordinates).title("Your exact location"));
-		
+		if (D)
+			Log.i(TAG,"onLocationChanged lat/lng: (" + location.getLatitude() + "," + location.getLongitude() + ") via " + location.getProvider() + " Accuracy: " + location.getAccuracy());
 		if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
+			if(locationMarker != null)
+				locationMarker.remove();
+			lastCoordinates = new LatLng(location.getLatitude(), location.getLongitude());
+			locationMarker = mMap.addMarker(new MarkerOptions().position(lastCoordinates).title("Your exact location"));
+			
 			if(firstExactPosition) {
 				firstExactPosition = false;			
 				mMap.animateCamera(CameraUpdateFactory.zoomTo(18), 2000, null);
+				mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastCoordinates, 15));
 			}
-			mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastCoordinates, 15));
+			//mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastCoordinates, 15));
 		}
 	}
+	
 	@Override
 	public void onProviderDisabled(String provider) {
-		Log.i(TAG, "Provider " + provider + " is now disabled.");
+		//if (D)
+			//Log.i(TAG, "Provider " + provider + " is now disabled.");
 	}
 	@Override
 	public void onProviderEnabled(String provider) {
-		Log.i(TAG, "Provider " + provider + " is now enabled.");
+		//if (D)
+			//Log.i(TAG, "Provider " + provider + " is now enabled.");
 	}
 	@Override
 	public void onStatusChanged(String provider, int status, Bundle extras) {
-		Log.i(TAG, "Provider " + provider + " has changed status to " + status);
+		//if (D)
+			//Log.i(TAG, "Provider " + provider + " has changed status to " + status);
 	}
 	
 	public void newMapMarker(LatLng coordinates, String title) {
 		float results[] = new float[3];
 		Location.distanceBetween(lastCoordinates.latitude, lastCoordinates.longitude, coordinates.latitude, coordinates.longitude, results);
 		
-		if (results.length > 0) {
-			Log.i(TAG, "Distance: " + results[0]);
-			if (results.length > 1) {
-				Log.i(TAG, "Initial bearing: " + results[1]);
-				if (results.length > 2)
-					Log.i(TAG, "Final bearing: " + results[2]);
+		if (D) {
+			if (results.length > 0) {
+				Log.i(TAG, "Distance: " + results[0]);
+				if (results.length > 1) {
+					Log.i(TAG, "Initial bearing: " + results[1]);
+					if (results.length > 2)
+						Log.i(TAG, "Final bearing: " + results[2]);
+				}
 			}
 		}
 		
-		appendToLog(coordinates);
 		if (mMap != null && coordinates != null) {
 			firstExactPosition = false; // We don't care about the new position if there is a new position available
-			Log.i(TAG,"newMapMarker " + coordinates.toString());
+			if (D)
+				Log.i(TAG,"newMapMarker " + coordinates.toString());
 			mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(coordinates, 5));
 			mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
 			mMap.addMarker(new MarkerOptions().position(coordinates).title(title));
+		}
+	}
+	
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		if(D)
+			Log.i(TAG, "onPrepareOptionsMenu");
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		if(D)
+			Log.i(TAG, "onCreateOptionsMenu");
+		super.onCreateOptionsMenu(menu);
+		MenuInflater inflater = getSupportMenuInflater(); // Inflate the menu; this adds items to the action bar if it is present	  	
+		inflater.inflate(R.menu.menu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case R.id.menu_send:
+				sendSMS(getApplicationContext().getString(R.string.phoneNumber1), "CMD");
+				return true;
+			default:
+				return super.onOptionsItemSelected(item);
 		}
 	}
 	

@@ -14,6 +14,8 @@ import android.util.Log;
 
 public class SmsReceiver extends BroadcastReceiver {
 	private static final String TAG = "SmsReceiver";
+	public static final boolean D = BuildConfig.DEBUG; // This is automatically set by Gradle
+	
 	private static final String SMS_ACTION = "android.provider.Telephony.SMS_RECEIVED";
 	private static final String SMS_EXTRA_NAME = "pdus";
 	private String address = "";
@@ -34,22 +36,26 @@ public class SmsReceiver extends BroadcastReceiver {
 				SmsMessage msgs = SmsMessage.createFromPdu((byte[]) smsExtra[smsExtra.length - 1]); // Get the newest message
 				address = msgs.getOriginatingAddress();
 				body = msgs.getMessageBody();
-				Log.i(TAG, "Received sms from: " + address + "\nMessage: " + body);
-				if (!address.equals(context.getString(R.string.phoneNumber1)))
-					mWeatherBalloonActivity.sendSMS(address, "My coordinates are: " + mWeatherBalloonActivity.lastCoordinates.toString());
+				if (D)
+					Log.i(TAG, "Received sms from: " + address + "\nMessage: " + body);
 				if (address.equals(context.getString(R.string.phoneNumber1)) || address.equals(context.getString(R.string.phoneNumber2))) { // Compare to the phone number
 					try {
-						String[] latLngStr = body.replaceAll("[^(0-9|,|.)]", "").split(",", 2);
-						if (latLngStr.length < 2) {
+						String[] strings = body.replaceAll("[^(0-9|,|.|:)]", "").split(",", 3);
+						if (strings.length != 3) {
 							Log.i(TAG, "Failed to split string");
 							return;
 						}
-						Log.i(TAG, "Coordinates: " + latLngStr[0] + "," + latLngStr[1]);
-						mWeatherBalloonActivity.newMapMarker(new LatLng(Double.parseDouble(latLngStr[0]),Double.parseDouble(latLngStr[1])),null);
+						if (D)
+							Log.i(TAG, "Time: " + strings[0] + " Coordinates: " + strings[1] + "," + strings[2]);
+						mWeatherBalloonActivity.newMapMarker(new LatLng(Double.parseDouble(strings[1]), Double.parseDouble(strings[2])), strings[0]);
+						mWeatherBalloonActivity.appendToLog(strings[0] + "," + strings[1] + "," + strings[2]);
+						//mWeatherBalloonActivity.sendSMS(address, "My coordinates are: " + mWeatherBalloonActivity.lastCoordinates.toString()); // Send a SMS back as well
 					} catch (NullPointerException e) {
-						Log.i(TAG, "Body is empty");
+						if (D)
+							Log.i(TAG, "Body is empty");
 					} catch (NumberFormatException e) {
-						Log.i(TAG, "Failed to parse double");
+						if (D)
+							Log.i(TAG, "Failed to parse double");
 					}
 				}
 			}

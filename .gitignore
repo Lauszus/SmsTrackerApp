@@ -21,17 +21,29 @@ local.properties
 .settings
 .checkstyle
 
-#Maven
+# Maven
 target
 release.properties
 pom.xml.*
 
-#Ant
+# Ant
 build.xml
 ant.properties
 local.properties
 proguard.cfg
 proguard-project.txt
+
+# Intellij project files
+*.iml
+*.ipr
+*.iws
+.idea/
+out/
+gen-external-apklibs/
+
+# Gradle
+.gradle
+build
 
 # Hide the Google API key and the phone number
 res/values/private.xml

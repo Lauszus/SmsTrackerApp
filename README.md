@@ -4,7 +4,7 @@
 The code is released under the GNU General Public License.
 _________
 
-This is an Android app intended to be used with a Weather balloon, RC plain or similar.
+This is an Android app intended to be used with a Weather balloon, RC plane or similar.
 
 When it receives a SMS with the time and coordinates like so:
 

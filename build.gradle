@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     compile 'com.android.support:support-v4:18.0.+'
-    compile 'com.google.android.gms:play-services:3.1.+'
+    compile 'com.google.android.gms:play-services:3.2.+'
     compile 'com.actionbarsherlock:actionbarsherlock:4.4.0@aar'
 }
 

@@ -1,4 +1,4 @@
-package com.tkjelectronics.weatherballoonapp;
+package com.tkjelectronics.smstrackerapp;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -37,8 +37,8 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.widget.Toast;
 
-public class WeatherBalloonActivity extends SherlockFragmentActivity implements LocationListener {
-	private static final String TAG = "WeatherBalloonActivity";
+public class SmsTrackerActivity extends SherlockFragmentActivity implements LocationListener {
+	private static final String TAG = "SmsTrackerActivity";
 	public static final boolean D = BuildConfig.DEBUG; // This is automatically set by Gradle
 	
 	private LocationManager locationManager;

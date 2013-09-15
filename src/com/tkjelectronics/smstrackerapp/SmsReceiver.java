@@ -1,4 +1,4 @@
-package com.tkjelectronics.weatherballoonapp;
+package com.tkjelectronics.smstrackerapp;
 
 import com.google.android.gms.maps.model.LatLng;
 
@@ -14,16 +14,16 @@ import android.util.Log;
 
 public class SmsReceiver extends BroadcastReceiver {
 	private static final String TAG = "SmsReceiver";
-	public static final boolean D = BuildConfig.DEBUG; // This is automatically set by Gradle
+	public static final boolean D = SmsTrackerActivity.D;
 	
 	private static final String SMS_ACTION = "android.provider.Telephony.SMS_RECEIVED";
 	private static final String SMS_EXTRA_NAME = "pdus";
 	private String address = "";
 	private String body = "";
-	private WeatherBalloonActivity mWeatherBalloonActivity;
+	private SmsTrackerActivity mSmsTrackerActivity;
 
-	public SmsReceiver(WeatherBalloonActivity weatherBalloonActivity) {
-		mWeatherBalloonActivity = weatherBalloonActivity;
+	public SmsReceiver(SmsTrackerActivity mSmsTrackerActivity) {
+		this.mSmsTrackerActivity = mSmsTrackerActivity;
 	}
 
 	@Override
@@ -47,9 +47,9 @@ public class SmsReceiver extends BroadcastReceiver {
 						}
 						if (D)
 							Log.i(TAG, "Time: " + strings[0] + " Coordinates: " + strings[1] + "," + strings[2]);
-						mWeatherBalloonActivity.newMapMarker(new LatLng(Double.parseDouble(strings[1]), Double.parseDouble(strings[2])), strings[0]);
-						mWeatherBalloonActivity.appendToLog(strings[0] + "," + strings[1] + "," + strings[2]);
-						//mWeatherBalloonActivity.sendSMS(address, "My coordinates are: " + mWeatherBalloonActivity.lastCoordinates.toString()); // Send a SMS back as well
+						mSmsTrackerActivity.newMapMarker(new LatLng(Double.parseDouble(strings[1]), Double.parseDouble(strings[2])), strings[0]);
+						mSmsTrackerActivity.appendToLog(strings[0] + "," + strings[1] + "," + strings[2]);
+						//mSmsTrackerActivity.sendSMS(address, "My coordinates are: " + mSmsTrackerActivity.lastCoordinates.toString()); // Send a SMS back as well
 					} catch (NullPointerException e) {
 						if (D)
 							Log.i(TAG, "Body is empty");

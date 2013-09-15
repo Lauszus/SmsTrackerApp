@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.tkjelectronics.weatherballoonapp"
+    package="com.tkjelectronics.smstrackerapp"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -13,8 +13,8 @@
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.RECEIVE_SMS" />
     
-    <uses-permission android:name="com.tkjelectronics.weatherballoonapp.permission.MAPS_RECEIVE" />
-    <permission android:name="com.tkjelectronics.weatherballoonapp.permission.MAPS_RECEIVE" android:protectionLevel="signature" />
+    <uses-permission android:name="com.tkjelectronics.smstrackerapp.permission.MAPS_RECEIVE" />
+    <permission android:name="com.tkjelectronics.smstrackerapp.permission.MAPS_RECEIVE" android:protectionLevel="signature" />
     
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -41,7 +41,7 @@
             android:value="@string/MapsKeyDebug" />
 
         <activity
-            android:name=".WeatherBalloonActivity"
+            android:name=".SmsTrackerActivity"
             android:label="@string/app_name"
             android:screenOrientation="portrait" >
             <intent-filter>

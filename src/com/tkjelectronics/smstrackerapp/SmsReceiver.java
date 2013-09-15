@@ -18,8 +18,6 @@ public class SmsReceiver extends BroadcastReceiver {
 	
 	private static final String SMS_ACTION = "android.provider.Telephony.SMS_RECEIVED";
 	private static final String SMS_EXTRA_NAME = "pdus";
-	private String address = "";
-	private String body = "";
 	private SmsTrackerActivity mSmsTrackerActivity;
 
 	public SmsReceiver(SmsTrackerActivity mSmsTrackerActivity) {
@@ -34,8 +32,8 @@ public class SmsReceiver extends BroadcastReceiver {
 			if (bundle != null) {
 				Object[] smsExtra = (Object[]) bundle.get(SMS_EXTRA_NAME); // Retrieve the SMS message received
 				SmsMessage msgs = SmsMessage.createFromPdu((byte[]) smsExtra[smsExtra.length - 1]); // Get the newest message
-				address = msgs.getOriginatingAddress();
-				body = msgs.getMessageBody();
+				String address = msgs.getOriginatingAddress();
+				String body = msgs.getMessageBody();
 				if (D)
 					Log.i(TAG, "Received sms from: " + address + "\nMessage: " + body);
 				if (address.equals(context.getString(R.string.phoneNumber1)) || address.equals(context.getString(R.string.phoneNumber2))) { // Compare to the phone number

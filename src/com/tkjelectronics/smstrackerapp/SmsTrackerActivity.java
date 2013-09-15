@@ -47,13 +47,12 @@ public class SmsTrackerActivity extends SherlockFragmentActivity implements Loca
 	private Marker locationMarker;
 	private boolean firstExactPosition;
 	private SmsReceiver mSmsReceiver = new SmsReceiver(this);
-	private File dir;
 	private File log;
 	public LatLng lastCoordinates;
 	
 	private static String SENT = "SMS_SENT";
     private static String DELIVERED = "SMS_DELIVERED";
-    private static int MAX_SMS_MESSAGE_LENGTH = 160;
+    private static final int MAX_SMS_MESSAGE_LENGTH = 160;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -63,13 +62,17 @@ public class SmsTrackerActivity extends SherlockFragmentActivity implements Loca
 		firstExactPosition = true;
 		
 		if(!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-			Toast.makeText(getApplicationContext(),"Please insert a SD card to use this application", Toast.LENGTH_LONG).show();
+			Toast.makeText(getApplicationContext(), "Please insert a SD card to use this application", Toast.LENGTH_LONG).show();
 			finish();
 		}
-		
-		dir = new File(Environment.getExternalStorageDirectory(), "Coordinates"); // Write data to the root of the SD card
-		if(!dir.exists())
-			dir.mkdir();
+
+        File dir = new File(Environment.getExternalStorageDirectory(), "Coordinates"); // Write data to the root of the SD card
+		if(!dir.exists()) {
+			if (!dir.mkdir()) {
+                Toast.makeText(getApplicationContext(), "Failed to create logging directory", Toast.LENGTH_LONG).show();
+                finish();
+            }
+        }
 		
 		log = new File(dir, "log.txt"); // Write data to the SD card
 		//log.delete();
